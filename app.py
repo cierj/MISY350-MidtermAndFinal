@@ -38,6 +38,15 @@ st.title("Health Tracker for ashma *Working Title*")
 #Journal should include a calendar where the user can write notes on their breathing throughout the day
 
 
+#awards section should include awards for a streak when recording their medicines (7 day, 30 day, 3 months, 6 months, 1 year, 2 years, 5 years)
+#and awards for a streak when recording their peak flow meter (7 day, 30 day, 3 months, 6 months, 1 year, 2 years, 5 years)
+#loading bar for next award and a section to view all awards received
+
+
+#help section should include a chatbot that can answer questions about asthma and how to use the app, and also a section to contact support if they have any issues with the app
+
+
+
 #st.set_page_config(page_title="Smart Coffee Kiosk Application")
 st.title("Health Tracker for ashma *Working Title*")
 
