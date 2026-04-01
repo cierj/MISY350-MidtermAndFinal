@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit as st
 import json
 from pathlib import Path
 
@@ -20,6 +19,8 @@ if orders_file.exists():
         orders = json.load(f)
 else:
     orders = []
+
+
 
 #st.set_page_config(page_title="Smart Coffee Kiosk Application")
 st.title("Health Tracker for ashma *Working Title*")
