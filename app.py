@@ -2,23 +2,23 @@ import streamlit as st
 import json
 from pathlib import Path
 
-json_file = Path("inventory.json")
-orders_file = Path("orders.json")
+json_file = Path("login.json")
+breath_file = Path("breath_info.json")
 
 # load inventory
 if json_file.exists():
     with open(json_file, "r") as f:
-        inventory = json.load(f)
+        login = json.load(f)
 else:
     # Default data if file doesn't exist
-    inventory = []
+    login = []
 
-# load orders
-if orders_file.exists():
-    with open(orders_file, "r") as f:
-        orders = json.load(f)
+# load breath info
+if breath_file.exists():
+    with open(breath_file, "r") as f:
+        breath_info = json.load(f)
 else:
-    orders = []
+    breath_info = []
 
 
 
