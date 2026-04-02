@@ -123,7 +123,7 @@ def login():
                     "role": status
                 })
                 
-                with open(json_path, "w") as f:
+                with open(json_file, "w") as f:
                     json.dump(user,f)
 
                 st.success("Account created!")
