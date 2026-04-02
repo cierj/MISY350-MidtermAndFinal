@@ -50,6 +50,8 @@ st.title("Health Tracker for ashma *Working Title*")
 #st.set_page_config(page_title="Smart Coffee Kiosk Application")
 st.title("Health Tracker for ashma *Working Title*")
 
+def home():
+    st.subheader("Home")
 
 def login():
     st.subheader("Login")
@@ -71,7 +73,7 @@ def coming_soon():
 
 def main():
     st.sidebar.title("Menu")
-    options = ["Login", "Record breath", "Ask a Question", "Coming Soon"]
+    options = ["Home","Login", "Record breath", "Ask a Question", "Coming Soon"]
 
     choice = st.sidebar.selectbox("Select an option", options)
     
@@ -83,5 +85,7 @@ def main():
         ask_question()
     elif choice == "Coming Soon":
         coming_soon()
+    elif choice == "home":
+        home()
 if __name__ == "__main__":
     main()
