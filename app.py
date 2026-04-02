@@ -3,6 +3,8 @@ from time import time
 import streamlit as st
 import json
 from pathlib import Path
+import uuid
+import time
 
 json_file = Path("login.json")
 breath_file = Path("breath_info.json")
@@ -26,7 +28,7 @@ journal_file = Path("journal.json")
 if journal_file.exists():
     with open(journal_file, "r") as f:
         journal_data = json.load(f)
- else:
+else:
         journal_data = {}
 
 #Adding Session State Stuffs
