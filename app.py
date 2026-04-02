@@ -6,16 +6,16 @@ from pathlib import Path
 import uuid
 import time
 
-json_file = Path("login.json")
+json_file = Path("users.json")
 breath_file = Path("breath_info.json")
 
 # JSON creations
 if json_file.exists():
     with open(json_file, "r") as f:
-        login = json.load(f)
+        users = json.load(f)
 else:
     # Default data if file doesn't exist
-    login = []
+    users = []
 
 # load breath info
 if breath_file.exists():
@@ -97,7 +97,7 @@ def login():
                     st.session_state["logged_in"] = True
                     st.session_state["user"] = found_user
                     st.session_state["role"] = found_user["role"]
-                    st.session_state["page"] = "home"
+                    st.session_state["page"] = "dashboard"
 
 
                     time.sleep(2)
@@ -116,12 +116,11 @@ def login():
         if st.button("Create Account", key= "register_btn"):
             with st.spinner("Creating account..."):
                 time.sleep(2) # Fake backend delay
-                # ... (Assume validation logic here) ...
-                user.append({
+                users.append({
                     "id": str(uuid.uuid4()),
                     "email": new_email,
                     "password": new_password,
-                    "role": "Instructor"
+                    "role": status
                 })
                 
                 with open(json_path, "w") as f:
@@ -201,59 +200,6 @@ def main():
         else:
             st.session_state["page"] = "journal"
             journal()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #journal
