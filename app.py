@@ -28,7 +28,7 @@ journal_file = Path("journal.json")
 if journal_file.exists():
     with open(journal_file, "r") as f:
         journal_data = json.load(f)
-else:
+ else:
         journal_data = {}
 
 #Adding Session State Stuffs
@@ -149,18 +149,38 @@ def coming_soon():
 
 
 
+def logout():
+    st.session_state["logged_in"] = False
+    st.session_state["user"] = None
+    st.session_state["role"] = None
+    st.session_state["page"] = "login"
+    st.success("Logged out successfully")
+    st.experimental_rerun()
+
+
 def main():
     st.sidebar.title("Menu")
-    options = ["dashboard","Login", "Record breath", "Ask a Question", "Journal","Coming Soon"]
+
+    if st.session_state.get("logged_in", False):
+        if st.sidebar.button("Logout"):
+            logout()
+    else:
+        st.sidebar.warning("Not logged in")
+
+    options = ["dashboard", "Login", "Record breath", "Ask a Question", "Journal", "Coming Soon"]
 
     choice = st.sidebar.selectbox("Select an option", options)
-    
+
     if choice == "Login":
         st.session_state["page"] = "login"
         login()
     elif choice == "Record breath":
-        st.session_state["page"] = "record_breath"
-        record_breath()
+        if not st.session_state.get("logged_in", False):
+            st.error("Please log in to record breath")
+            login()
+        else:
+            st.session_state["page"] = "record_breath"
+            record_breath()
     elif choice == "Ask a Question":
         st.session_state["page"] = "ask_question"
         ask_question()
@@ -168,11 +188,19 @@ def main():
         st.session_state["page"] = "coming_soon"
         coming_soon()
     elif choice == "dashboard":
-        st.session_state["page"] = "dashboard"
-        dashboard()
+        if not st.session_state.get("logged_in", False):
+            st.error("Please log in to access the dashboard")
+            login()
+        else:
+            st.session_state["page"] = "dashboard"
+            dashboard()
     elif choice == "Journal":
-        st.session_state["page"] = "journal"
-        journal()
+        if not st.session_state.get("logged_in", False):
+            st.error("Please log in to access Journal")
+            login()
+        else:
+            st.session_state["page"] = "journal"
+            journal()
 
 
 
@@ -312,5 +340,6 @@ def journal():
 
 if __name__ == "__main__":
     main()
+
 
 
