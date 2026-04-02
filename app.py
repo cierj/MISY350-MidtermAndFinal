@@ -26,8 +26,8 @@ else:
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
-if "users" not in st.session_state:
-    st.session_state["users"] = None
+if "user" not in st.session_state:
+    st.session_state["user"] = None
 
 if "role" not in st.session_state:
     st.session_state["role"] = None
@@ -78,7 +78,7 @@ def login():
                 
                 # Find user
                 found_user = None
-                for user in users:
+                for user in user:
                     if user["email"].strip().lower() == email_input.strip().lower() and user["password"] == password_input:
                         found_user = user
                         break
@@ -106,7 +106,7 @@ def login():
             with st.spinner("Creating account..."):
                 time.sleep(2) # Fake backend delay
                 # ... (Assume validation logic here) ...
-                users.append({
+                user.append({
                     "id": str(uuid.uuid4()),
                     "email": new_email,
                     "password": new_password,
@@ -114,13 +114,13 @@ def login():
                 })
                 
                 with open(json_path, "w") as f:
-                    json.dump(users,f)
+                    json.dump(user,f)
 
                 st.success("Account created!")
                 st.rerun()
 
     st.write("---")
-    st.dataframe(users)
+    st.dataframe(user)
 
 
 def record_breath():
@@ -248,7 +248,7 @@ def journal():
         )
         
         if selected_date:
-            date_str = selected_date.strftime("%Y-%m-%d")
+            date_str = selected_date.strftime("%m-%d-%Y")
             
             # Text area for feelings and notes
             feelings = st.selectbox(
