@@ -26,8 +26,8 @@ else:
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
-if "user" not in st.session_state:
-    st.session_state["user"] = None
+if "users" not in st.session_state:
+    st.session_state["users"] = None
 
 if "role" not in st.session_state:
     st.session_state["role"] = None
@@ -62,7 +62,6 @@ st.title("Health Tracker for ashma *Working Title*")
 
 
 #st.set_page_config(page_title="Smart Coffee Kiosk Application")
-st.title("Health Tracker for ashma *Working Title*")
 
 def dashboard():
     st.subheader("dashboard")
