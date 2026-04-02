@@ -87,7 +87,7 @@ def login():
                 
                 # Find user
                 found_user = None
-                for user in login:
+                for user in users:
                     if user["email"].strip().lower() == email_input.strip().lower() and user["password"] == password_input:
                         found_user = user
                         break
