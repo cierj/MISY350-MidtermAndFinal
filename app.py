@@ -140,7 +140,7 @@ def coming_soon():
 
 def main():
     st.sidebar.title("Menu")
-    options = ["dashboard","Login", "Record breath", "Ask a Question", "Coming Soon"]
+    options = ["dashboard","Login", "Record breath", "Ask a Question", "Journal","Coming Soon"]
 
     choice = st.sidebar.selectbox("Select an option", options)
     
@@ -159,8 +159,11 @@ def main():
     elif choice == "dashboard":
         st.session_state["page"] = "dashboard"
         dashboard()
-if __name__ == "__main__":
-    main()
+    elif choice == "Journal":
+        st.session_state["page"] = "journal"
+        journal()
+
+
 
 
 
@@ -301,5 +304,10 @@ def journal():
                         st.rerun()
         else:
             st.info("No journal entries yet. Start by adding one!")
+
+
+
+if __name__ == "__main__":
+    main()
 
 
