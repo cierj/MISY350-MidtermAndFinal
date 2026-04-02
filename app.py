@@ -106,10 +106,12 @@ def login():
                     st.error("Invalid credentials")
 
     # --- REGISTRATION ---
-    st.subheader("New Instructor Account")
+    st.subheader("New Account")
     with st.container(border=True):
         new_email = st.text_input("Email", key= "email_register")
         new_password = st.text_input("Password", type="password", key= "password_edit")
+        confirm_password = st.text_input("Confirm Password", type="password", key= "confirm_password")
+        status = st.radio("Select your role:", options=["Parent", "Child"], horizontal=True)
         
         if st.button("Create Account", key= "register_btn"):
             with st.spinner("Creating account..."):
