@@ -3,6 +3,8 @@ from time import time
 import streamlit as st
 import json
 from pathlib import Path
+import uuid
+import time
 
 json_file = Path("login.json")
 breath_file = Path("breath_info.json")
@@ -26,8 +28,8 @@ journal_file = Path("journal.json")
 if journal_file.exists():
     with open(journal_file, "r") as f:
         journal_data = json.load(f)
-else:
-    journal_data = {}
+ else:
+        journal_data = {}
 
 #Adding Session State Stuffs
 if "logged_in" not in st.session_state:
@@ -81,11 +83,11 @@ def login():
         
         if st.button("Log In", type="primary", use_container_width=True):
             with st.spinner("Logging in..."):
-                time.sleep(2) # Fake backend delay
+                time.sleep(2) # Fake delay
                 
                 # Find user
                 found_user = None
-                for user in user:
+                for user in login:
                     if user["email"].strip().lower() == email_input.strip().lower() and user["password"] == password_input:
                         found_user = user
                         break
