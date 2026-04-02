@@ -1,3 +1,5 @@
+from time import time
+
 import streamlit as st
 import json
 from pathlib import Path
@@ -20,6 +22,18 @@ if breath_file.exists():
 else:
     breath_info = []
 
+#Adding Session State Stuffs
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+if "user" not in st.session_state:
+    st.session_state["user"] = None
+
+if "role" not in st.session_state:
+    st.session_state["role"] = None
+
+if "page" not in st.session_state:
+    st.session_state["page"] = "dashboard"
 
 
 #st.set_page_config(page_title="Smart Coffee Kiosk Application")
@@ -33,7 +47,7 @@ st.title("Health Tracker for ashma *Working Title*")
 # and an character of our choice which shows their percentage of healthiness for the day (based on peak flow meter and daily check in)
 
 
-#We want a home page, journal, awards, and a help section (maybe could implement the chatbot here)
+#We want a dashboard page, journal, awards, and a help section (maybe could implement the chatbot here)
 
 #Journal should include a calendar where the user can write notes on their breathing throughout the day
 
@@ -50,11 +64,65 @@ st.title("Health Tracker for ashma *Working Title*")
 #st.set_page_config(page_title="Smart Coffee Kiosk Application")
 st.title("Health Tracker for ashma *Working Title*")
 
-def home():
-    st.subheader("Home")
+def dashboard():
+    st.subheader("dashboard")
 
 def login():
     st.subheader("Login")
+    with st.container(border=True):
+        email_input = st.text_input("Email", key= "email_login")
+        password_input = st.text_input("Password", type="password",key="password_login")
+        
+        if st.button("Log In", type="primary", use_container_width=True):
+            with st.spinner("Logging in..."):
+                time.sleep(2) # Fake backend delay
+                
+                # Find user
+                found_user = None
+                for user in users:
+                    if user["email"].strip().lower() == email_input.strip().lower() and user["password"] == password_input:
+                        found_user = user
+                        break
+                
+                if found_user:
+                    st.success(f"Welcome back, {found_user['email']}!")
+                    st.session_state["logged_in"] = True
+                    st.session_state["user"] = found_user
+                    st.session_state["role"] = found_user["role"]
+                    st.session_state["page"] = "home"
+
+
+                    time.sleep(2)
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials")
+
+    # --- REGISTRATION ---
+    st.subheader("New Instructor Account")
+    with st.container(border=True):
+        new_email = st.text_input("Email", key= "email_register")
+        new_password = st.text_input("Password", type="password", key= "password_edit")
+        
+        if st.button("Create Account", key= "register_btn"):
+            with st.spinner("Creating account..."):
+                time.sleep(2) # Fake backend delay
+                # ... (Assume validation logic here) ...
+                users.append({
+                    "id": str(uuid.uuid4()),
+                    "email": new_email,
+                    "password": new_password,
+                    "role": "Instructor"
+                })
+                
+                with open(json_path, "w") as f:
+                    json.dump(users,f)
+
+                st.success("Account created!")
+                st.rerun()
+
+    st.write("---")
+    st.dataframe(users)
+
 
 def record_breath():
     st.subheader("Record Breath")
@@ -73,20 +141,25 @@ def coming_soon():
 
 def main():
     st.sidebar.title("Menu")
-    options = ["Home","Login", "Record breath", "Ask a Question", "Coming Soon"]
+    options = ["dashboard","Login", "Record breath", "Ask a Question", "Coming Soon"]
 
     choice = st.sidebar.selectbox("Select an option", options)
     
     if choice == "Login":
+        st.session_state["page"] = "login"
         login()
     elif choice == "Record breath":
+        st.session_state["page"] = "record_breath"
         record_breath()
     elif choice == "Ask a Question":
+        st.session_state["page"] = "ask_question"
         ask_question()
     elif choice == "Coming Soon":
+        st.session_state["page"] = "coming_soon"
         coming_soon()
-    elif choice == "home":
-        home()
+    elif choice == "dashboard":
+        st.session_state["page"] = "dashboard"
+        dashboard()
 if __name__ == "__main__":
     main()
 
