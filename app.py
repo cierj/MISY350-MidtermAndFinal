@@ -124,7 +124,7 @@ def login():
                 })
                 
                 with open(json_file, "w") as f:
-                    json.dump(user,f)
+                    json.dump(users,f)
 
                 st.success("Account created!")
                 st.rerun()
