@@ -83,11 +83,11 @@ def login():
         
         if st.button("Log In", type="primary", use_container_width=True):
             with st.spinner("Logging in..."):
-                time.sleep(2) # Fake backend delay
+                time.sleep(2) # Fake delay
                 
                 # Find user
                 found_user = None
-                for user in user:
+                for user in login:
                     if user["email"].strip().lower() == email_input.strip().lower() and user["password"] == password_input:
                         found_user = user
                         break
