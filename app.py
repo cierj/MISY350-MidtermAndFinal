@@ -244,6 +244,7 @@ def journal():
         selected_date = st.date_input(
             "Select a date",
             value=None,
+            format="MM-DD-YYYY",
             key="journal_date"
         )
         
