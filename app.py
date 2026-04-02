@@ -7,7 +7,7 @@ from pathlib import Path
 json_file = Path("login.json")
 breath_file = Path("breath_info.json")
 
-# load inventory
+# JSON creations
 if json_file.exists():
     with open(json_file, "r") as f:
         login = json.load(f)
@@ -21,6 +21,13 @@ if breath_file.exists():
         breath_info = json.load(f)
 else:
     breath_info = []
+
+journal_file = Path("journal.json")
+if journal_file.exists():
+    with open(journal_file, "r") as f:
+        journal_data = json.load(f)
+ else:
+        journal_data = {}
 
 #Adding Session State Stuffs
 if "logged_in" not in st.session_state:
@@ -226,14 +233,6 @@ def main():
 def journal():
     st.subheader("My Health Journal")
     st.write("Track your feelings and health notes throughout the year.")
-    
-    # Initialize journal data file
-    journal_file = Path("journal.json")
-    if journal_file.exists():
-        with open(journal_file, "r") as f:
-            journal_data = json.load(f)
-    else:
-        journal_data = {}
     
     # Create tabs for viewing and adding entries
     tab1, tab2 = st.tabs(["Add Entry", "View Entries"])
