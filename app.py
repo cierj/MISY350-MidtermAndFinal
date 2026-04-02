@@ -28,7 +28,7 @@ journal_file = Path("journal.json")
 if journal_file.exists():
     with open(journal_file, "r") as f:
         journal_data = json.load(f)
- else:
+else:
         journal_data = {}
 
 #Adding Session State Stuffs
