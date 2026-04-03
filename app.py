@@ -76,11 +76,11 @@ def dashboard():
 def login():
     st.subheader("Login")
     with st.container(border=True):
-        email_input = st.text_input("Email", key="email_login")
+        username_input = st.text_input("Username", key="username_login")
         password_input = st.text_input("Password", type="password", key="password_login")
         
         if st.button("Log In", type="primary", use_container_width=True):
-            if not email_input or not password_input:
+            if not username_input or not password_input:
                 st.error("Please fill in all fields")
                 return
             
@@ -89,13 +89,13 @@ def login():
                 found_user = None
                 
                 for user in users:
-                    if user["email"].lower() == email_input.lower():
+                    if user["username"].lower() == username_input.lower():
                         if check_password_hash(user["password"], password_input):
                             found_user = user
                         break
                 
                 if found_user:
-                    st.success(f"Welcome back, {found_user['email']}!")
+                    st.success(f"Welcome back, {found_user['username']}!")
                     st.session_state["logged_in"] = True
                     st.session_state["user"] = found_user
                     st.session_state["role"] = found_user["role"]
@@ -103,18 +103,19 @@ def login():
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("Invalid email or password")
+                    st.error("Invalid username or password")
 
     # --- REGISTRATION ---
     st.subheader("Create New Account")
     with st.container(border=True):
+        new_username = st.text_input("Username", key="username_register")
         new_email = st.text_input("Email", key="email_register")
         new_password = st.text_input("Password", type="password", key="password_register")
         confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
         role = st.radio("Select your role:", options=["Parent", "Child"], horizontal=True)
         
         if st.button("Create Account", key="register_btn"):
-            if not new_email or not new_password or not confirm_password:
+            if not new_username or not new_email or not new_password or not confirm_password:
                 st.error("Please fill in all fields")
                 return
             
@@ -126,6 +127,10 @@ def login():
                 st.error("Password must be at least 8 characters")
                 return
             
+            if any(user["username"].lower() == new_username.lower() for user in users):
+                st.error("Username already taken")
+                return
+            
             if any(user["email"].lower() == new_email.lower() for user in users):
                 st.error("Email already registered")
                 return
@@ -134,6 +139,7 @@ def login():
                 time.sleep(1)
                 new_user = {
                     "id": str(uuid.uuid4()),
+                    "username": new_username.lower(),
                     "email": new_email.lower(),
                     "password": generate_password_hash(new_password),
                     "role": role
