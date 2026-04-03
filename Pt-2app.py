@@ -47,7 +47,7 @@ if "page" not in st.session_state:
     st.session_state["page"] = "dashboard"
 
 
-st.title("Health Tracker for ashma *Working Title*")
+st.title("Breeze Buddy - Your Asthma Companion")
 
 # Dashboard should include: daily check in, wind power test with peak flow meter,
 # and an character of our choice which shows their percentage of healthiness for the day (based on peak flow meter and daily check in)
