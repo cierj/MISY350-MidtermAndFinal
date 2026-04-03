@@ -1,7 +1,5 @@
 #This is for anything we need to move but to have it in a different file to prevent merge issues
-
 from time import time
-
 import streamlit as st
 import json
 from pathlib import Path
@@ -11,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import re
 
 json_file = Path("users.json")
-breath_file = Path("breath_info.json")
+# breath_file = Path("breath_info.json")
 
 # JSON creations
 if json_file.exists():
@@ -22,11 +20,11 @@ else:
     users = []
 
 # load breath info
-if breath_file.exists():
-    with open(breath_file, "r") as f:
-        breath_info = json.load(f)
-else:
-    breath_info = []
+# if breath_file.exists():
+#     with open(breath_file, "r") as f:
+#         breath_info = json.load(f)
+# else:
+#     breath_info = []
 
 journal_file = Path("journal.json")
 if journal_file.exists():
@@ -49,7 +47,6 @@ if "page" not in st.session_state:
     st.session_state["page"] = "dashboard"
 
 
-#st.set_page_config(page_title="Smart Coffee Kiosk Application")
 st.title("Health Tracker for ashma *Working Title*")
 
 # Dashboard should include: daily check in, wind power test with peak flow meter,
@@ -72,8 +69,10 @@ st.title("Health Tracker for ashma *Working Title*")
 
 #st.set_page_config(page_title="Smart Coffee Kiosk Application")
 
+
 def dashboard():
     st.subheader("dashboard")
+
 
 def login():
     st.subheader("Login")
@@ -113,7 +112,7 @@ def login():
         new_email = st.text_input("Email", key="email_register")
         new_password = st.text_input("Password", type="password", key="password_register")
         confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
-        role = st.radio("Select your role:", options=["Parent", "Child"], horizontal=True)
+        role = st.radio("Select your role:", options=["Parent", "Child"], horizontal=True, key="role_select")
         
         if st.button("Create Account", key="register_btn"):
             if not new_email or not new_password or not confirm_password:
@@ -151,19 +150,12 @@ def login():
     st.dataframe(users)
 
 
-def record_breath():
-    st.subheader("Record Breath")
-
-def ask_question():
-    st.subheader("Ask a Question")
-
-def coming_soon():
-    st.subheader("Coming Soon")
+#def record_breath():
+#    st.subheader("Record Breath")
 
 
-
-
-
+#def ask_question():
+#    st.subheader("Ask a Question")
 
 
 def logout():
@@ -174,60 +166,10 @@ def logout():
     st.success("Logged out successfully")
     st.rerun()
 
-
-def main():
-    st.sidebar.title("Menu")
-
-    if st.session_state.get("logged_in", False):
-        if st.sidebar.button("Logout"):
-            logout()
-    else:
-        st.sidebar.warning("Not logged in")
-
-    options = ["dashboard", "Login", "Record breath", "Ask a Question", "Journal", "Coming Soon"]
-
-    choice = st.sidebar.selectbox("Select an option", options)
-
-    if choice == "Login":
-        st.session_state["page"] = "login"
-        login()
-    elif choice == "Record breath":
-        if not st.session_state.get("logged_in", False):
-            st.error("Please log in to record breath")
-            login()
-        else:
-            st.session_state["page"] = "record_breath"
-            record_breath()
-    elif choice == "Ask a Question":
-        st.session_state["page"] = "ask_question"
-        ask_question()
-    elif choice == "Coming Soon":
-        st.session_state["page"] = "coming_soon"
-        coming_soon()
-    elif choice == "dashboard":
-        if not st.session_state.get("logged_in", False):
-            st.error("Please log in to access the dashboard")
-            login()
-        else:
-            st.session_state["page"] = "dashboard"
-            dashboard()
-    elif choice == "Journal":
-        if not st.session_state.get("logged_in", False):
-            st.error("Please log in to access Journal")
-            login()
-        else:
-            st.session_state["page"] = "journal"
-            journal()
-
-
-#journal
-
-
-# ============================================
-# ============================================
-
 def journal():
     st.subheader("My Health Journal")
+
+    # Final product idea: summarize child journal entries if parent
     st.write("Track your feelings and health notes throughout the year.")
     
     # Create tabs for viewing and adding entries
@@ -299,6 +241,51 @@ def journal():
                         st.rerun()
         else:
             st.info("No journal entries yet. Start by adding one!")
+
+def main():
+    st.sidebar.title("Menu")
+
+    if st.session_state.get("logged_in", False):
+        if st.sidebar.button("Logout"):
+            logout()
+    else:
+        st.sidebar.warning("Not logged in")
+
+    options = ["dashboard", 
+               "Login", 
+    #           "Record breath", 
+    #           "Ask a Question", 
+               "Journal"]
+
+    choice = st.sidebar.selectbox("Select an option", options)
+
+    if choice == "Login":
+        st.session_state["page"] = "login"
+        login()
+    # elif choice == "Record breath":
+    #     if not st.session_state.get("logged_in", False):
+    #         st.error("Please log in to record breath")
+    #         login()
+    #     else:
+    #         st.session_state["page"] = "record_breath"
+    #         record_breath()
+    # elif choice == "Ask a Question":
+    #     st.session_state["page"] = "ask_question"
+    #     ask_question()
+    elif choice == "dashboard":
+        if not st.session_state.get("logged_in", False):
+            st.error("Please log in to access the dashboard")
+            login()
+        else:
+            st.session_state["page"] = "dashboard"
+            dashboard()
+    elif choice == "Journal":
+        if not st.session_state.get("logged_in", False):
+            st.error("Please log in to access Journal")
+            login()
+        else:
+            st.session_state["page"] = "journal"
+            journal()
 
 
 
