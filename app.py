@@ -130,7 +130,6 @@ def login():
                 st.rerun()
 
     st.write("---")
-    st.dataframe(users)
 
 
 def record_breath():
@@ -154,7 +153,7 @@ def logout():
     st.session_state["role"] = None
     st.session_state["page"] = "login"
     st.success("Logged out successfully")
-    st.experimental_rerun()
+    st.rerun()
 
 
 def main():
