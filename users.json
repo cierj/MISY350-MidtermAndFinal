@@ -1,1 +1,36 @@
-[{"id": "33e9ddea-57ab-4da3-8ee5-0b94086b3734", "email": "sfolkart@udel.edu", "password": "1234", "role": "Child"}, {"id": "52f37304-69ed-41ed-9f6b-4eace873ae5a", "email": "sfolkart@udel.edu", "password": "1234", "role": "Child"}]
+[
+    {
+        "id": "33e9ddea-57ab-4da3-8ee5-0b94086b3734",
+        "email": "sfolkart@udel.edu",
+        "password": "1234",
+        "role": "Child",
+        "username": "sfolkart@udel.edu",
+        "children": []
+    },
+    {
+        "id": "52f37304-69ed-41ed-9f6b-4eace873ae5a",
+        "email": "sfolkart@udel.edu",
+        "password": "1234",
+        "role": "Child",
+        "username": "sfolkart@udel.edu",
+        "children": []
+    },
+    {
+        "id": "c4bdd2f7-3c88-4c3c-bb30-401cfab2a0f5",
+        "username": "sfolkart",
+        "email": "folkartst@gmail.com",
+        "password": "scrypt:32768:8:1$F2V8h24Fv1sTQPOE$21221d048b90a49d75717c85daa1503f6539f89aa5dfd5232f3930ed1a29bdce6605462e8286052f7024080da4b1a2675b485fd698db20c51a828f353a478632",
+        "role": "Parent",
+        "children": [
+            "child"
+        ]
+    },
+    {
+        "id": "5a9858dd-0a47-4a97-90ea-3a0cc2f188e7",
+        "username": "child",
+        "email": "child",
+        "password": "scrypt:32768:8:1$qbgF7mavb5RpeFi7$80dc93497c0b1067cc1c05daca9e04e4b4bab95800be101644cdef421dade4fc05da769dde28b8b7149f68f36460552ce1b21d3a08eb0bd6120dbb795dc8ea9f",
+        "role": "Child",
+        "children": []
+    }
+]

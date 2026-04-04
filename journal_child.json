@@ -1,0 +1,28 @@
+{
+    "2026-04-04": {
+        "feeling": "Anxious \ud83d\ude30",
+        "notes": "i feel anxious",
+        "breathing": 10
+    },
+    "2026-04-04 2026-04-04 13:44:47": {
+        "date": "2026-04-04",
+        "time": "2026-04-04 13:44:47",
+        "feeling": "Happy \ud83d\ude0a",
+        "notes": "i feel great!",
+        "breathing": 10
+    },
+    "2026-04-04 2026-04-04 13:46:39": {
+        "date": "2026-04-04",
+        "time": "2026-04-04 13:46:39",
+        "feeling": "Happy \ud83d\ude0a",
+        "notes": "i feel great",
+        "breathing": 10
+    },
+    "2026-04-04 2026-04-04 13:52:31": {
+        "date": "2026-04-04",
+        "time": "13:52:31",
+        "feeling": "Happy \ud83d\ude0a",
+        "notes": "great!",
+        "breathing": 10
+    }
+}
