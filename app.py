@@ -101,6 +101,7 @@ def login():
             st.session_state["role"] = found_user.get("role", "Child")
             st.session_state["page"] = "dashboard"
             time.sleep(0.5)
+            st.experimental_rerun()
             return
         else:
             st.error("Invalid username or password")
@@ -144,14 +145,16 @@ def login():
             save_users()
             st.success("Account created! Please log in.")
             time.sleep(0.5)
+            st.experimental_rerun()
 
         st.info("Please use the login form above to sign in with your new account.")
 
     st.write("---")
-    st.write("Existing accounts")
-    st.dataframe([
-        {"username": u.get("username"), "email": u.get("email"), "role": u.get("role")} for u in users
-    ])
+    # For debugging. Shows list of accounts
+    #st.write("Existing accounts")
+    #st.dataframe([
+    #    {"username": u.get("username"), "email": u.get("email"), "role": u.get("role")} for u in users
+    #])
 
 
 def logout():
@@ -161,6 +164,7 @@ def logout():
     st.session_state["page"] = "login"
     st.session_state["viewing_child"] = None
     st.success("Logged out successfully")
+    st.experimental_rerun()
 
 
 def dashboard():
@@ -188,6 +192,7 @@ def dashboard():
         
         if st.button("Manage Children", key="dashboard_manage_children"):
             st.session_state["page"] = "manage_children"
+            st.experimental_rerun()
             return
 
         if current_user.get("children"):
@@ -258,6 +263,7 @@ def manage_children():
 
         save_users()
         st.success(f"Child {child_id} linked successfully")
+        st.experimental_rerun()
         return
 
     st.write("---")
@@ -277,6 +283,7 @@ def manage_children():
             if st.button(f"View {display_name}'s Info", key=f"view_{child_id}"):
                 st.session_state["viewing_child"] = child_id
                 st.session_state["page"] = "child_info"
+                st.experimental_rerun()
                 return
             if st.button(f"Unlink {display_name}", key=f"unlink_{child_id}"):
                 parent_id = current_user.get("id")
@@ -290,6 +297,7 @@ def manage_children():
                     current_user["children"].remove(child_id)
                 save_users()
                 st.success(f"{display_name} has been removed from your account")
+                st.experimental_rerun()
                 return
 
 
@@ -324,6 +332,7 @@ def child_info():
     if st.button("Back to Manage Children", key="back_to_manage"):
         st.session_state["page"] = "manage_children"
         st.session_state["viewing_child"] = None
+        st.experimental_rerun()
         return
 
 
@@ -374,6 +383,7 @@ def journal():
             }
             save_journal(username, journal_data)
             st.success(f"Entry saved for {date_str} at {timestamp}")
+            st.experimental_rerun()
             return
 
     with tab2:
@@ -433,7 +443,6 @@ def main():
             login()
         else:
             manage_children()
-
     if st.session_state.get("page") == "child_info":
         child_info()
 

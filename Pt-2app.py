@@ -147,7 +147,6 @@ def login():
                 st.rerun()
 
     st.write("---")
-    st.dataframe(users)
 
 
 #def record_breath():
