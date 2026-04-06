@@ -43,6 +43,13 @@ def find_user_by_login(login_value):
     return None
 
 
+def authenticate_user(login_value, password):
+    user = find_user_by_login(login_value)
+    if user and check_password_hash(user.get("password", ""), password):
+        return user
+    return None
+
+
 def load_journal(username):
     journal_path = Path(f"journal_{username}.json")
     if journal_path.exists():
@@ -60,16 +67,45 @@ def save_journal(username, data):
         json.dump(data, f, indent=4)
 
 
-if "logged_in" not in st.session_state:
-    st.session_state["logged_in"] = False
-if "user" not in st.session_state:
-    st.session_state["user"] = None
-if "role" not in st.session_state:
-    st.session_state["role"] = None
-if "page" not in st.session_state:
-    st.session_state["page"] = "login"
-if "viewing_child" not in st.session_state:
-    st.session_state["viewing_child"] = None
+def display_journal_entries(journal_data, full_display=False, prefix=""):
+    if not journal_data:
+        st.info("No journal entries yet. Start by adding one!")
+        return
+    for entry_key in sorted(journal_data.keys(), reverse=True):
+        entry = journal_data[entry_key]
+        label = f"{entry.get('date')} {entry.get('time', '')} — {entry.get('feeling')}"
+        with st.expander(f"{prefix}{label}"):
+            if full_display:
+                st.write(f"**Time:** {entry.get('time', 'N/A')}")
+                st.write(f"**Feeling:** {entry.get('feeling')}")
+            st.write(f"**Breathing:** {entry.get('breathing')}")
+            st.write(f"**Notes:** {entry.get('notes')}")
+
+
+def get_child_user(child_id):
+    return next((u for u in users if get_user_identifier(u) == child_id), None)
+
+def require_login():
+    current_user = st.session_state.get("user")
+    if not current_user:
+        st.error("Please log in first")
+        return None
+    return current_user
+
+def initialize_session_state():
+    if "logged_in" not in st.session_state:
+        st.session_state["logged_in"] = False
+    if "user" not in st.session_state:
+        st.session_state["user"] = None
+    if "role" not in st.session_state:
+        st.session_state["role"] = None
+    if "page" not in st.session_state:
+        st.session_state["page"] = "login"
+    if "viewing_child" not in st.session_state:
+        st.session_state["viewing_child"] = None
+
+
+initialize_session_state()
 
 st.set_page_config(page_title="Breeze Buddy - Your Asthma Companion")
 st.title("Breeze Buddy - Your Asthma Companion")
@@ -88,11 +124,7 @@ def login():
         found_user = None
         with st.spinner("Logging in..."):
             time.sleep(1)
-            for user in users:
-                if user.get("username", "").lower() == username_input.lower() or user.get("email", "").lower() == username_input.lower():
-                    if check_password_hash(user.get("password", ""), password_input):
-                        found_user = user
-                        break
+            found_user = authenticate_user(username_input, password_input)
 
         if found_user:
             st.success(f"Welcome back, {found_user.get('username')}!")
@@ -101,7 +133,7 @@ def login():
             st.session_state["role"] = found_user.get("role", "Child")
             st.session_state["page"] = "dashboard"
             time.sleep(0.5)
-            st.experimental_rerun()
+            st.rerun()
             return
         else:
             st.error("Invalid username or password")
@@ -145,7 +177,7 @@ def login():
             save_users()
             st.success("Account created! Please log in.")
             time.sleep(0.5)
-            st.experimental_rerun()
+            st.rerun()
 
         st.info("Please use the login form above to sign in with your new account.")
 
@@ -158,20 +190,21 @@ def login():
 
 
 def logout():
-    st.session_state["logged_in"] = False
-    st.session_state["user"] = None
-    st.session_state["role"] = None
-    st.session_state["page"] = "login"
-    st.session_state["viewing_child"] = None
-    st.success("Logged out successfully")
-    st.experimental_rerun()
+    with st.spinner("Logging out..."):
+        time.sleep(1)
+        st.session_state["logged_in"] = False
+        st.session_state["user"] = None
+        st.session_state["role"] = None
+        st.session_state["page"] = "login"
+        st.session_state["viewing_child"] = None
+        st.success("Logged out successfully")
+    st.rerun()
 
 
 def dashboard():
     st.subheader("Dashboard")
-    current_user = st.session_state.get("user")
+    current_user = require_login()
     if not current_user:
-        st.error("Please log in first.")
         return
 
     username = current_user.get('username')
@@ -192,13 +225,13 @@ def dashboard():
         
         if st.button("Manage Children", key="dashboard_manage_children"):
             st.session_state["page"] = "manage_children"
-            st.experimental_rerun()
+            st.rerun()
             return
 
         if current_user.get("children"):
             st.write("### Your linked children")
             for child_id in current_user.get("children", []):
-                child_user = next((u for u in users if get_user_identifier(u) == child_id), None)
+                child_user = get_child_user(child_id)
                 display_name = child_user.get("username") if child_user else child_id
                 st.write(f"- {display_name}")
     else:
@@ -228,8 +261,10 @@ def dashboard():
 
 def manage_children():
     st.subheader("Manage Children")
-    current_user = st.session_state.get("user")
-    if not current_user or current_user.get("role") != "Parent":
+    current_user = require_login()
+    if not current_user:
+        return
+    if current_user.get("role") != "Parent":
         st.error("Only parents can manage children")
         return
 
@@ -263,7 +298,7 @@ def manage_children():
 
         save_users()
         st.success(f"Child {child_id} linked successfully")
-        st.experimental_rerun()
+        st.rerun()
         return
 
     st.write("---")
@@ -274,7 +309,7 @@ def manage_children():
         return
 
     for child_id in children:
-        child_user = next((u for u in users if get_user_identifier(u) == child_id), None)
+        child_user = get_child_user(child_id)
         display_name = child_user.get("username") if child_user else child_id
         with st.expander(f"👶 {display_name}"):
             if child_user:
@@ -283,7 +318,7 @@ def manage_children():
             if st.button(f"View {display_name}'s Info", key=f"view_{child_id}"):
                 st.session_state["viewing_child"] = child_id
                 st.session_state["page"] = "child_info"
-                st.experimental_rerun()
+                st.rerun()
                 return
             if st.button(f"Unlink {display_name}", key=f"unlink_{child_id}"):
                 parent_id = current_user.get("id")
@@ -297,7 +332,7 @@ def manage_children():
                     current_user["children"].remove(child_id)
                 save_users()
                 st.success(f"{display_name} has been removed from your account")
-                st.experimental_rerun()
+                st.rerun()
                 return
 
 
@@ -307,7 +342,11 @@ def child_info():
         st.error("No child selected")
         return
 
-    child_user = next((u for u in users if get_user_identifier(u) == child_id), None)
+    current_user = require_login()
+    if not current_user:
+        return
+
+    child_user = get_child_user(child_id)
     if not child_user:
         st.error("Child account not found")
         return
@@ -317,30 +356,19 @@ def child_info():
     st.write("### Journal Entries")
 
     journal_data = load_journal(get_user_identifier(child_user))
-    if not journal_data:
-        st.info("No journal notes found for this child yet.")
-    else:
-        for entry_key in sorted(journal_data.keys(), reverse=True):
-            entry = journal_data[entry_key]
-            label = f"{entry.get('date')} {entry.get('time', '')} — {entry.get('feeling')}"
-            with st.expander(f"{label}"):
-                st.write(f"**Time:** {entry.get('time', 'N/A')}")
-                st.write(f"**Feeling:** {entry.get('feeling')}")
-                st.write(f"**Breathing:** {entry.get('breathing')}")
-                st.write(f"**Notes:** {entry.get('notes')}")
+    display_journal_entries(journal_data, full_display=True)
 
     if st.button("Back to Manage Children", key="back_to_manage"):
         st.session_state["page"] = "manage_children"
         st.session_state["viewing_child"] = None
-        st.experimental_rerun()
+        st.rerun()
         return
 
 
 def journal():
     st.subheader("My Health Journal")
-    current_user = st.session_state.get("user")
+    current_user = require_login()
     if not current_user:
-        st.error("Please log in first")
         return
 
     username = get_user_identifier(current_user)
@@ -383,19 +411,11 @@ def journal():
             }
             save_journal(username, journal_data)
             st.success(f"Entry saved for {date_str} at {timestamp}")
-            st.experimental_rerun()
+            st.rerun()
             return
 
     with tab2:
-        if not journal_data:
-            st.info("No journal entries yet. Start by adding one!")
-        else:
-            for entry_key in sorted(journal_data.keys(), reverse=True):
-                entry = journal_data[entry_key]
-                label = f"{entry.get('date')} {entry.get('time', '')} — {entry.get('feeling')}"
-                with st.expander(f"📅 {label}"):
-                    st.write(f"**Breathing:** {entry.get('breathing')}")
-                    st.write(f"**Notes:** {entry.get('notes')}")
+        display_journal_entries(journal_data, full_display=False, prefix="📅 ")
 
 
 def main():
