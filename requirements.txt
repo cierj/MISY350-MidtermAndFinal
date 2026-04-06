@@ -1,2 +1,2 @@
 streamlit
-werkzeug.security
+werkzeug
