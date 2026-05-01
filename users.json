@@ -1,18 +1,18 @@
 [
     {
         "id": "33e9ddea-57ab-4da3-8ee5-0b94086b3734",
+        "username": "sfolkart@udel.edu",
         "email": "sfolkart@udel.edu",
         "password": "1234",
         "role": "Child",
-        "username": "sfolkart@udel.edu",
         "children": []
     },
     {
         "id": "52f37304-69ed-41ed-9f6b-4eace873ae5a",
+        "username": "sfolkart@udel.edu",
         "email": "sfolkart@udel.edu",
         "password": "1234",
         "role": "Child",
-        "username": "sfolkart@udel.edu",
         "children": []
     },
     {
@@ -31,6 +31,14 @@
         "email": "child",
         "password": "scrypt:32768:8:1$qbgF7mavb5RpeFi7$80dc93497c0b1067cc1c05daca9e04e4b4bab95800be101644cdef421dade4fc05da769dde28b8b7149f68f36460552ce1b21d3a08eb0bd6120dbb795dc8ea9f",
         "role": "Child",
+        "children": []
+    },
+    {
+        "id": "a5320e2d-0dde-46d7-947f-fc4669282584",
+        "username": "jacobc",
+        "email": "cierj@udel.edu",
+        "password": "scrypt:32768:8:1$fE5VlHz75tRjiNwK$f89f614fea99d93540b8988ad58871767aadb162835f968885f7cf02086163e9d74403b71591d7643612366488112fdccd0efea5edf4db9486501943bebbcc77",
+        "role": "Parent",
         "children": []
     }
 ]
