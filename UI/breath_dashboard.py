@@ -74,10 +74,9 @@ def render_login(auth_service: AuthService) -> None:
     st.info("""
     **Demo Accounts for Testing:**
     
-    - **Parent Account:** Username: `sfolkart`, Password: `1234`
-      - Can view child's journal entries
-    - **Child Account:** Username: `child`, Password: `1234`
-      - Has sample journal entries that parent can see
+    Parent: username: `sfolkart` password: `123456789`
+    
+    Child: username: `child` password: `12345678`
     
     These accounts are pre-configured and connected for demonstration purposes.
     """)
