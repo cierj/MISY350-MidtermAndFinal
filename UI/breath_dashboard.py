@@ -69,6 +69,19 @@ def perform_logout() -> None:
 
 def render_login(auth_service: AuthService) -> None:
     st.header("Login")
+
+    # Demo info box
+    st.info("""
+    **Demo Accounts for Testing:**
+    
+    - **Parent Account:** Username: `sfolkart`, Password: `1234`
+      - Can view child's journal entries
+    - **Child Account:** Username: `child`, Password: `1234`
+      - Has sample journal entries that parent can see
+    
+    These accounts are pre-configured and connected for demonstration purposes.
+    """)
+
     with st.form(key="login_form"):
         username = st.text_input("Username or Email")
         password = st.text_input("Password", type="password")
