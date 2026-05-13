@@ -1,3 +1,6 @@
+#Note: This app is all legacy code that is before the code refactoring. 
+#It is preserved here for project continuity.
+
 from app import main
 
 
