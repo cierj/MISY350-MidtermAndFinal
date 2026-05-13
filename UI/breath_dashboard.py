@@ -1,6 +1,7 @@
 import streamlit as st
 from typing import Optional
 
+from Services.ai_manager import AIService
 from Services.journal_manager import AuthService, JournalService
 from Data.journal_store import User
 
@@ -12,6 +13,8 @@ def initialize_session_state() -> None:
         "role": None,
         "page": "Login",
         "viewing_child_id": None,
+        "faq_messages": [],
+        "faq_user_input": "",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -27,7 +30,7 @@ def get_current_user(auth_service: AuthService) -> Optional[User]:
     return auth_service.get_user_by_id(user_id)
 
 
-def run_app(auth_service: AuthService, journal_service: JournalService) -> None:
+def run_app(auth_service: AuthService, journal_service: JournalService, ai_service: AIService) -> None:
     st.set_page_config(page_title="Breeze Buddy - Your Asthma Companion", page_icon="🌬️")
     initialize_session_state()
 
@@ -39,7 +42,7 @@ def run_app(auth_service: AuthService, journal_service: JournalService) -> None:
         else:
             st.info("Please log in to continue")
 
-        menu_options = ["Dashboard", "Journal"] if st.session_state.get("logged_in") else ["Login"]
+        menu_options = ["Dashboard", "Journal", "Frequently asked questions"] if st.session_state.get("logged_in") else ["Login"]
         if st.session_state.get("logged_in") and st.session_state.get("role") == "Parent":
             menu_options.append("Manage Children")
 
@@ -54,6 +57,8 @@ def run_app(auth_service: AuthService, journal_service: JournalService) -> None:
         render_dashboard(auth_service, journal_service)
     elif st.session_state["page"] == "Journal":
         render_journal_page(auth_service, journal_service)
+    elif st.session_state["page"] == "Frequently asked questions":
+        render_faq_page(auth_service, ai_service)
     elif st.session_state["page"] == "Manage Children":
         render_manage_children(auth_service)
 
@@ -74,7 +79,7 @@ def render_login(auth_service: AuthService) -> None:
     st.info("""
     **Demo Accounts for Testing:**
     
-    Parent: username: `sfolkart` password: `123456789`
+    Parent: username: `sfolkart` password: `12345678`
     
     Child: username: `child` password: `12345678`
     
@@ -164,6 +169,69 @@ def render_dashboard(auth_service: AuthService, journal_service: JournalService)
         if st.button("Record Feeling Now"):
             st.session_state["page"] = "Journal"
             st.rerun()
+
+
+def render_faq_page(auth_service: AuthService, ai_service: AIService) -> None:
+    user = get_current_user(auth_service)
+    if user is None:
+        st.error("Please log in first.")
+        return
+
+    st.header("Frequently asked questions")
+    left_column, right_column = st.columns(2)
+
+    with left_column:
+        faqs = [
+            (
+                "What are the most common asthma symptoms?",
+                "Common symptoms include coughing, wheezing, chest tightness, and shortness of breath."
+            ),
+            (
+                "How should I use my inhaler?",
+                "Use your inhaler exactly as prescribed. Shake before use, breathe out fully, then inhale slowly while pressing the canister."
+            ),
+            (
+                "What can trigger an asthma attack?",
+                "Triggers can include pollen, dust, smoke, strong smells, cold air, exercise, and respiratory infections."
+            ),
+            (
+                "When should I seek medical help?",
+                "Seek help if your symptoms worsen, your rescue inhaler does not help, or you feel dizzy, confused, or too tired to breathe comfortably."
+            ),
+        ]
+
+        for question, answer in faqs:
+            with st.expander(question):
+                st.write(answer)
+
+    with right_column:
+        st.subheader("Asthma Help Chatbot")
+        if st.session_state.get("faq_messages") == []:
+            stored_history = ai_service.load_chat_history(user.identifier)
+            st.session_state["faq_messages"] = [message.to_dict() for message in stored_history]
+
+        if st.button("Clear conversation", key="clear_faq_chat"):
+            ai_service.clear_chat_history(user.identifier)
+            st.session_state["faq_messages"] = []
+            st.session_state["faq_user_input"] = ""
+            st.rerun()
+
+        for message in st.session_state.get("faq_messages", []):
+            if message["role"] == "assistant":
+                st.info(message["content"], icon="🤖")
+            else:
+                st.write(f"**You:** {message['content']}")
+
+        with st.form(key="faq_chat_form"):
+            user_input = st.text_input("Ask a question about asthma", key="faq_user_input")
+            submitted = st.form_submit_button("Send")
+
+            if submitted and user_input:
+                response = ai_service.process_user_message(user.identifier, user_input)
+                st.session_state["faq_messages"].append({"role": "user", "content": user_input})
+                st.session_state["faq_messages"].append({"role": "assistant", "content": response})
+                st.session_state["faq_user_input"] = ""
+                st.rerun()
 
 
 def render_journal_page(auth_service: AuthService, journal_service: JournalService) -> None:

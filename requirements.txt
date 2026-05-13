@@ -1,2 +1,4 @@
 streamlit
 werkzeug
+openai
+python-dotenv
