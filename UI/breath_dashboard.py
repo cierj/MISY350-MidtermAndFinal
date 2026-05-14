@@ -421,7 +421,7 @@ def render_child_journal(auth_service: AuthService, journal_service: JournalServ
                     st.session_state["good_day_message"] = True
                 st.success("Your feeling has been submitted.")
                 st.info(f"Saved entry for {entry.date} at {entry.time}.")
-                st.experimental_rerun()
+                st.rerun()
             except ValidationError as e:
                 st.error(f"Failed to submit entry: {e.message}")
             except Exception as e:
