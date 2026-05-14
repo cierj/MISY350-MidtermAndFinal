@@ -1,7 +1,7 @@
 """Journal and authentication services for Breeze Buddy."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -137,11 +137,13 @@ class AuthService:
             if child_user is None or child_user.role.lower() != "child":
                 raise ValidationError("Child account not found or not a child account")
 
-            # Update parent user with child link
-            if child_user.identifier not in parent_user.children:
-                parent_user.children.append(child_user.identifier)
-                # Note: This assumes the user store handles updating the user
-                logger.info(f"Linked child {child_user.username} to parent {parent_user.username}")
+            child_id = child_user.identifier
+            if child_id in parent_user.children:
+                raise ValidationError("Child already linked")
+
+            parent_user.children.append(child_id)
+            self._user_store.update_user(parent_user)
+            logger.info(f"Linked child {child_user.username} to parent {parent_user.username}")
 
             return child_user
         except ValidationError:
@@ -149,14 +151,6 @@ class AuthService:
         except Exception as e:
             logger.error(f"Error linking child {child_login} to parent {parent_user.username}: {e}")
             raise ValidationError(f"Failed to link child account: {str(e)}")
-
-        child_id = child_user.identifier
-        if child_id in parent_user.children:
-            raise ValueError("Child already linked")
-
-        parent_user.children.append(child_id)
-        self._user_store.update_user(parent_user)
-        return parent_user
 
 
 class JournalService:
@@ -181,10 +175,22 @@ class JournalService:
         """
         try:
             journal_data = self._journal_store.load_journal(username)
-            entries = [
-                JournalEntry.from_dict(payload)
-                for _, payload in sorted(journal_data.items(), reverse=True)
-            ]
+            entries = []
+            for key, payload in sorted(journal_data.items(), reverse=True):
+                if not isinstance(payload, dict):
+                    continue
+                entry = JournalEntry.from_dict(payload)
+                if not entry.date and len(key) >= 10:
+                    candidate_date = key[:10]
+                    try:
+                        datetime.strptime(candidate_date, "%Y-%m-%d")
+                        entry.date = candidate_date
+                    except ValueError:
+                        pass
+                if not entry.time and len(key) > 10 and key[10] == " ":
+                    entry.time = key[11:]
+                entries.append(entry)
+
             logger.debug(f"Retrieved {len(entries)} entries for {username}")
             return entries
         except Exception as e:
@@ -209,6 +215,62 @@ class JournalService:
         except Exception as e:
             logger.error(f"Error checking today's entry for {username}: {e}")
             return False
+
+    def _parse_entry_date(self, entry: JournalEntry) -> Optional[datetime.date]:
+        try:
+            return datetime.strptime(entry.date, "%Y-%m-%d").date()
+        except ValueError:
+            if entry.time and len(entry.time) >= 10 and entry.time[4] == "-" and entry.time[7] == "-":
+                try:
+                    return datetime.strptime(entry.time[:10], "%Y-%m-%d").date()
+                except ValueError:
+                    return None
+            return None
+
+    def get_consecutive_streak(self, username: str) -> int:
+        """Calculate the current consecutive-day streak for a user."""
+        entries = self.list_entries(username)
+        if not entries:
+            return 0
+
+        date_set = {parsed_date for parsed_date in (self._parse_entry_date(entry) for entry in entries) if parsed_date is not None}
+        if not date_set:
+            return 0
+        latest_date = max(date_set)
+        streak = 0
+        current_date = latest_date
+
+        while current_date in date_set:
+            streak += 1
+            current_date -= timedelta(days=1)
+
+        return streak
+
+    def get_average_breath_rating(self, username: str) -> float:
+        """Calculate the average breathing rating from all journal entries."""
+        entries = self.list_entries(username)
+        if not entries:
+            return 0.0
+
+        ratings = []
+        for entry in entries:
+            try:
+                ratings.append(int(entry.breathing))
+            except ValueError:
+                continue
+
+        return round(sum(ratings) / len(ratings), 1) if ratings else 0.0
+
+    def get_streak_milestones(self, streak_days: int) -> dict:
+        """Return milestone progress for streak badges."""
+        milestones = {
+            "1w": 7,
+            "2w": 14,
+            "1m": 30,
+            "6m": 182,
+            "1y": 365,
+        }
+        return {label: streak_days >= days for label, days in milestones.items()}
 
     def add_entry(self, username: str, feeling: str, breathing: int, notes: str) -> JournalEntry:
         """Add a new journal entry for a user.

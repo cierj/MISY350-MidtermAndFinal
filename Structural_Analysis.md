@@ -1,3 +1,4 @@
+#Stephen Folkart and Jacob Cierniak
 # Structural Analysis
 
 ## Origin Prompt

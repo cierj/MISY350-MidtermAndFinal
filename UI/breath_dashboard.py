@@ -21,6 +21,7 @@ def initialize_session_state() -> None:
         "viewing_child_id": None,
         "faq_messages": [],
         "faq_user_input": "",
+        "good_day_message": False,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -42,6 +43,67 @@ def get_current_user(auth_service: AuthService) -> Optional[User]:
     if not user_id:
         return None
     return auth_service.get_user_by_id(user_id)
+
+
+def render_dashboard_kpis(user: User, journal_service: JournalService) -> None:
+    """Render dashboard KPI cards for both parent and child users."""
+    is_child = user.role.lower() == "child"
+    streak = journal_service.get_consecutive_streak(user.identifier)
+    average_breath = journal_service.get_average_breath_rating(user.identifier)
+    milestones = journal_service.get_streak_milestones(streak)
+    milestone_display = " ".join(
+        f"{'⭐' if earned else '☆'} {label}"
+        for label, earned in milestones.items()
+    )
+
+    if is_child and st.session_state.get("good_day_message"):
+        st.markdown(
+            '''<div style='margin-bottom:18px; font-size:24px; font-weight:bold; text-align:center; background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); -webkit-background-clip: text; color: transparent;'>That's amazing! Keep up the great work!</div>''',
+            unsafe_allow_html=True,
+        )
+        st.session_state["good_day_message"] = False
+
+    card_style = (
+        "border-radius: 18px; padding: 22px; min-height: 190px; "
+        "box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);"
+    )
+    child_style = "background: linear-gradient(135deg, #fff7d6, #ffdfe0);"
+    parent_style = "background: #f5f7fb;"
+    container_style = card_style + (child_style if is_child else parent_style) + " text-align:center;"
+
+    average_text = f"{average_breath:.1f}" if average_breath > 0 else "—"
+    streak_label = f"{streak} day{'s' if streak != 1 else ''}"
+
+    col1, col2, col3 = st.columns([1, 1, 1], gap="large")
+    with col1:
+        st.markdown(
+            f"<div style='{container_style}'>"
+            f"<div style='font-size:18px; font-weight:700; margin-bottom:10px;'>Streak</div>"
+            f"<div style='font-size:44px; color:#FFD700; margin-bottom:8px;'>{'⭐' if streak >= 1 else '☆'}</div>"
+            f"<div style='font-size:15px; margin-bottom:6px;'>{milestone_display}</div>"
+            f"<div style='font-size:14px; color:#444;'>Milestone progress</div>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+    with col2:
+        st.markdown(
+            f"<div style='{container_style}'>"
+            f"<div style='font-size:18px; font-weight:700; margin-bottom:10px;'>Days Logged</div>"
+            f"<div style='font-size:56px; color:#0072C6; margin-bottom:6px;'>{streak}</div>"
+            f"<div style='font-size:15px; color:#444;'>{streak_label} in a row</div>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+    with col3:
+        breath_color = "red" if is_child else "#333"
+        st.markdown(
+            f"<div style='{container_style}'>"
+            f"<div style='font-size:18px; font-weight:700; margin-bottom:10px;'>Average Breath</div>"
+            f"<div style='font-size:58px; color:{breath_color}; margin-bottom:8px;'>{average_text}</div>"
+            f"<div style='font-size:15px; color:#444;'>Updated with every breath log</div>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
 
 
 def run_app(auth_service: AuthService, journal_service: JournalService, ai_service: AIService) -> None:
@@ -188,6 +250,7 @@ def render_dashboard(auth_service: AuthService, journal_service: JournalService)
 
     st.header("Dashboard")
     st.markdown(f"### Welcome, {user.username}! 👋")
+    render_dashboard_kpis(user, journal_service)
 
     if user.role.lower() == "parent":
         st.subheader("Parent Overview")
@@ -334,6 +397,13 @@ def render_parent_journal(auth_service: AuthService, journal_service: JournalSer
 
 
 def render_child_journal(auth_service: AuthService, journal_service: JournalService, user: User) -> None:
+    if st.session_state.get("good_day_message"):
+        st.markdown(
+            '''<div style='margin-bottom:18px; font-size:24px; font-weight:bold; text-align:center; background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); -webkit-background-clip: text; color: transparent;'>That's amazing! Keep up the great work!</div>''',
+            unsafe_allow_html=True,
+        )
+        st.session_state["good_day_message"] = False
+
     with st.expander("Record a new feeling", expanded=True):
         feeling = st.selectbox(
             "How are you feeling today?",
@@ -346,8 +416,12 @@ def render_child_journal(auth_service: AuthService, journal_service: JournalServ
         if st.button("Submit Feeling", key="submit_feeling"):
             try:
                 entry = journal_service.add_entry(user.identifier, feeling, breathing, notes)
+                is_good_day = breathing >= 8 or "happy" in feeling.lower()
+                if is_good_day:
+                    st.session_state["good_day_message"] = True
                 st.success("Your feeling has been submitted.")
                 st.info(f"Saved entry for {entry.date} at {entry.time}.")
+                st.experimental_rerun()
             except ValidationError as e:
                 st.error(f"Failed to submit entry: {e.message}")
             except Exception as e:

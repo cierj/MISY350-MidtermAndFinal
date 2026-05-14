@@ -49,11 +49,18 @@ class JournalEntry:
 
     @classmethod
     def from_dict(cls, payload: Dict[str, Any]) -> "JournalEntry":
+        date = payload.get("date", "") or ""
+        time = payload.get("time", "") or ""
+        if not date and time and len(time) >= 10 and time[4] == "-" and time[7] == "-":
+            date = time[:10]
+            if len(time) > 10 and time[10] == " ":
+                time = time[11:]
+
         return cls(
-            date=payload.get("date", ""),
-            time=payload.get("time", ""),
+            date=date,
+            time=time,
             feeling=payload.get("feeling", ""),
-            breathing=payload.get("breathing", ""),
+            breathing=str(payload.get("breathing", "")),
             notes=payload.get("notes", ""),
         )
 

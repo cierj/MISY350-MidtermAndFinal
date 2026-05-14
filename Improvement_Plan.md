@@ -1,3 +1,5 @@
+#Stephen Folkart and Jacob Cierniak
+
 # Origin Prompt
 
 Create a file named Improvement_Plan.md. I want you to create a plan first based on the feature analysis on what to improve, do not implement any changes, just take what i am telling you and create a plan for adding this functionality. List the plan in the Improvement_Plan.md file. At the top of the file there should be a section Titled Origin Prompt That contains everything written for this prompt.
