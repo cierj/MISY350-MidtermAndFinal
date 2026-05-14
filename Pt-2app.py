@@ -7,8 +7,8 @@ from app import main
 if __name__ == "__main__":
     main()
 
-        st.rerun()
-        return
+    st.rerun()
+    return
 
     st.write("---")
     st.write("### Linked Children")
