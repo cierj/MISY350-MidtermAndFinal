@@ -1,13 +1,42 @@
+"""AI data storage and OpenAI client management."""
+
 import json
-import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from dotenv import load_dotenv
-from openai import OpenAI
 
-load_dotenv()
-OPENAI_CLIENT = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+from config import get_settings
+
+# Initialize OpenAI client lazily when needed
+_OPENAI_CLIENT = None
+
+
+def get_openai_client():
+    """Get or create the OpenAI client.
+    
+    Returns:
+        OpenAI client instance
+        
+    Raises:
+        ImportError: If OpenAI client cannot be created due to missing credentials
+    """
+    global _OPENAI_CLIENT
+    if _OPENAI_CLIENT is None:
+        try:
+            from openai import OpenAI
+            settings = get_settings()
+            if not settings.openai_api_key:
+                # Create a client without validation for development/testing
+                _OPENAI_CLIENT = None
+                return None
+            _OPENAI_CLIENT = OpenAI(api_key=settings.openai_api_key)
+        except Exception as e:
+            raise ImportError(f"Failed to initialize OpenAI client: {e}")
+    return _OPENAI_CLIENT
+
+
+# For backward compatibility, create an alias
+OPENAI_CLIENT = None
 
 
 

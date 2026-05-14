@@ -1,12 +1,18 @@
+"""Streamlit UI for Breeze Buddy asthma management application."""
+
 import streamlit as st
 from typing import Optional
 
+from config import get_settings
+from utils.exceptions import AuthenticationError, ValidationError, AIServiceError
 from Services.ai_manager import AIService
 from Services.journal_manager import AuthService, JournalService
 from Data.journal_store import User
 
 
 def initialize_session_state() -> None:
+    """Initialize Streamlit session state with default values."""
+    settings = get_settings()
     defaults = {
         "logged_in": False,
         "user_id": None,
@@ -22,6 +28,14 @@ def initialize_session_state() -> None:
 
 
 def get_current_user(auth_service: AuthService) -> Optional[User]:
+    """Get the currently logged-in user from session state.
+
+    Args:
+        auth_service: Authentication service
+
+    Returns:
+        User object if logged in, None otherwise
+    """
     if not st.session_state.get("logged_in"):
         return None
     user_id = st.session_state.get("user_id")
@@ -31,7 +45,18 @@ def get_current_user(auth_service: AuthService) -> Optional[User]:
 
 
 def run_app(auth_service: AuthService, journal_service: JournalService, ai_service: AIService) -> None:
-    st.set_page_config(page_title="Breeze Buddy - Your Asthma Companion", page_icon="🌬️")
+    """Run the main Streamlit application.
+
+    Args:
+        auth_service: Authentication service
+        journal_service: Journal service
+        ai_service: AI service
+    """
+    settings = get_settings()
+    st.set_page_config(
+        page_title=settings.app_title,
+        page_icon=settings.app_icon
+    )
     initialize_session_state()
 
     with st.sidebar:
@@ -49,7 +74,7 @@ def run_app(auth_service: AuthService, journal_service: JournalService, ai_servi
         selected = st.radio("Navigate", menu_options, index=menu_options.index(st.session_state.get("page")))
         st.session_state["page"] = selected
 
-    st.title("Breeze Buddy - Your Asthma Companion")
+    st.title(settings.app_title)
 
     if st.session_state["page"] == "Login":
         render_login(auth_service)
@@ -64,6 +89,7 @@ def run_app(auth_service: AuthService, journal_service: JournalService, ai_servi
 
 
 def perform_logout() -> None:
+    """Perform user logout and clear session state."""
     st.session_state["logged_in"] = False
     st.session_state["user_id"] = None
     st.session_state["role"] = None
@@ -73,16 +99,21 @@ def perform_logout() -> None:
 
 
 def render_login(auth_service: AuthService) -> None:
+    """Render the login page.
+
+    Args:
+        auth_service: Authentication service
+    """
     st.header("Login")
 
     # Demo info box
     st.info("""
     **Demo Accounts for Testing:**
-    
+
     Parent: username: `sfolkart` password: `12345678`
-    
+
     Child: username: `child` password: `12345678`
-    
+
     These accounts are pre-configured and connected for demonstration purposes.
     """)
 
@@ -95,9 +126,24 @@ def render_login(auth_service: AuthService) -> None:
             if not username or not password:
                 st.error("Please enter both username/email and password.")
                 return
-            user = auth_service.authenticate(username, password)
-            if user is None:
-                st.error("Invalid login credentials.")
+
+            try:
+                user = auth_service.authenticate(username, password)
+                if user is None:
+                    st.error("Invalid login credentials.")
+                    return
+
+                st.session_state["logged_in"] = True
+                st.session_state["user_id"] = user.id
+                st.session_state["role"] = user.role
+                st.session_state["page"] = "Dashboard"
+                st.success(f"Welcome back, {user.username}!")
+                st.rerun()
+
+            except AuthenticationError as e:
+                st.error(f"Login failed: {e.message}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {str(e)}")
                 return
 
             st.session_state["logged_in"] = True
@@ -128,8 +174,10 @@ def render_login(auth_service: AuthService) -> None:
                 auth_service.register(new_username, new_email, new_password, role)
                 st.success("Account created successfully. Please log in.")
                 st.session_state["page"] = "Login"
-            except ValueError as error:
-                st.error(str(error))
+            except ValidationError as e:
+                st.error(f"Registration failed: {e.message}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {str(e)}")
 
 
 def render_dashboard(auth_service: AuthService, journal_service: JournalService) -> None:
@@ -211,10 +259,15 @@ def render_faq_page(auth_service: AuthService, ai_service: AIService) -> None:
             st.session_state["faq_messages"] = [message.to_dict() for message in stored_history]
 
         if st.button("Clear conversation", key="clear_faq_chat"):
-            ai_service.clear_chat_history(user.identifier)
-            st.session_state["faq_messages"] = []
-            st.session_state["faq_user_input"] = ""
-            st.rerun()
+            try:
+                ai_service.clear_chat_history(user.identifier)
+                st.session_state["faq_messages"] = []
+                st.session_state["faq_user_input"] = ""
+                st.rerun()
+            except AIServiceError as e:
+                st.error(f"Failed to clear conversation: {e.message}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {str(e)}")
 
         for message in st.session_state.get("faq_messages", []):
             if message["role"] == "assistant":
@@ -227,11 +280,17 @@ def render_faq_page(auth_service: AuthService, ai_service: AIService) -> None:
             submitted = st.form_submit_button("Send")
 
             if submitted and user_input:
-                response = ai_service.process_user_message(user.identifier, user_input)
-                st.session_state["faq_messages"].append({"role": "user", "content": user_input})
-                st.session_state["faq_messages"].append({"role": "assistant", "content": response})
-                st.session_state["faq_user_input"] = ""
-                st.rerun()
+                try:
+                    response = ai_service.process_user_message(user.identifier, user_input)
+                    st.session_state["faq_messages"].append({"role": "user", "content": user_input})
+                    st.session_state["faq_messages"].append({"role": "assistant", "content": response})
+                    st.session_state["faq_user_input"] = ""
+                    st.rerun()
+                except AIServiceError as e:
+                    st.error(f"AI service error: {e.message}")
+                    st.info("Please try again or check your internet connection.")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred: {str(e)}")
 
 
 def render_journal_page(auth_service: AuthService, journal_service: JournalService) -> None:
@@ -285,9 +344,14 @@ def render_child_journal(auth_service: AuthService, journal_service: JournalServ
         notes = st.text_area("Notes", placeholder="Add any symptoms, triggers, or thoughts.", key="notes_area")
 
         if st.button("Submit Feeling", key="submit_feeling"):
-            entry = journal_service.add_entry(user.identifier, feeling, breathing, notes)
-            st.success("Your feeling has been submitted.")
-            st.info(f"Saved entry for {entry.date} at {entry.time}.")
+            try:
+                entry = journal_service.add_entry(user.identifier, feeling, breathing, notes)
+                st.success("Your feeling has been submitted.")
+                st.info(f"Saved entry for {entry.date} at {entry.time}.")
+            except ValidationError as e:
+                st.error(f"Failed to submit entry: {e.message}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {str(e)}")
 
     entries = journal_service.list_entries(user.identifier)
     render_entry_list(entries)
@@ -323,9 +387,10 @@ def render_manage_children(auth_service: AuthService) -> None:
                 auth_service.link_child(user, child_login)
                 st.success("Child linked successfully.")
                 st.rerun()
-            except ValueError as error:
-                st.error(str(error))
-                return
+            except ValidationError as e:
+                st.error(f"Failed to link child: {e.message}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {str(e)}")
 
     if not user.children:
         st.info("You have not linked any child accounts yet.")
