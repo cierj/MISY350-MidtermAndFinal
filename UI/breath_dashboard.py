@@ -112,7 +112,7 @@ def render_login(auth_service: AuthService) -> None:
 
     Parent: username: `sfolkart` password: `12345678`
 
-    Child: username: `child` password: `12345678`
+    Child: username: `child` password: `123456789`
 
     These accounts are pre-configured and connected for demonstration purposes.
     """)
